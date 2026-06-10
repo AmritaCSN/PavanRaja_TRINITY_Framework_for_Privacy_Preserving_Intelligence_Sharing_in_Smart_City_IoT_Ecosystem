@@ -1,0 +1,15 @@
+{
+  "experiment": "proj1_fedavg",
+  "algo": "FedAvg",
+  "n_rounds": 50,
+  "final_accuracy": 0.9825,
+  "final_f1": 0.961,
+  "final_precision": 0.9505,
+  "final_recall": 0.9717,
+  "avg_latency_s": 10.681,
+  "privacy_mode": "none",
+  "final_epsilon": null,
+  "blockchain_records": 0,
+  "use_dp": false,
+  "use_smpc": false
+}

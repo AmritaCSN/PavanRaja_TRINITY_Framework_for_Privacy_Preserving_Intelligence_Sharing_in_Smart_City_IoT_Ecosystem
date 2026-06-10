@@ -1,0 +1,15 @@
+{
+  "experiment": "proj5_fedprox_dp_smpc",
+  "algo": "FedProx",
+  "n_rounds": 50,
+  "final_accuracy": 0.9683,
+  "final_f1": 0.9255,
+  "final_precision": 0.9679,
+  "final_recall": 0.8867,
+  "avg_latency_s": 24.459,
+  "privacy_mode": "dp+smpc",
+  "final_epsilon": 10.0,
+  "blockchain_records": 50,
+  "use_dp": true,
+  "use_smpc": true
+}

@@ -1,0 +1,4 @@
+Site,City,Total,Normal,Attack,Normal_%,Attack_%,Train,Val,Test,Dataset
+site-1,City_A,53973,41973,12000,77.8,22.2,37781,8095,8095,Real_ToN_IoT
+site-2,City_B,60000,30000,30000,50.0,50.0,42000,9000,9000,Real_ToN_IoT
+site-3,City_C,60000,12000,48000,20.0,80.0,42000,9000,9000,Real_ToN_IoT
