@@ -1,0 +1,36 @@
+# =============================================================================
+# TRINITY FRAMEWORK — Python Requirements (conflict-resolved)
+# nvflare 2.4.1 requires protobuf==4.24.4
+# tensorboard 2.14.x is the last version compatible with protobuf>=4.24
+# =============================================================================
+
+# Federated Learning
+nvflare==2.4.1
+
+# Deep Learning
+torch==2.1.2
+torchvision==0.16.2
+
+# Differential Privacy
+opacus==1.4.0
+
+# Secure Aggregation (CKKS)
+tenseal==0.3.14
+
+# Data Engineering
+numpy==1.26.3
+pandas==2.1.4
+scikit-learn==1.3.2
+scipy==1.11.4
+
+# Visualization
+matplotlib==3.8.2
+seaborn==0.13.1
+tensorboard==2.14.0
+
+# Utilities
+tqdm==4.66.1
+pyyaml==6.0.1
+python-dotenv==1.0.0
+requests==2.31.0
+cryptography==41.0.7
