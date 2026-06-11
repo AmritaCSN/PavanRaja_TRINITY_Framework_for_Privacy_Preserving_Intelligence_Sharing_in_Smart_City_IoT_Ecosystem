@@ -1,0 +1,329 @@
+# =============================================================================
+# TRINITY FRAMEWORK — Docker Compose
+# Services: Fabric CA, Orderer, 3 Peers, CouchDB instances, CLI, API Bridge
+# Channel: city-intel-channel  |  Chaincode: cti_audit
+# =============================================================================
+
+version: '3.8'
+
+networks:
+  trinity_net:
+    name: trinity_net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24
+
+volumes:
+  orderer.trinity.local:
+  peer0.city_a.trinity.local:
+  peer0.city_b.trinity.local:
+  peer0.city_c.trinity.local:
+  ca.trinity.local:
+  couchdb_city_a:
+  couchdb_city_b:
+  couchdb_city_c:
+
+services:
+
+  # ── Certificate Authority ────────────────────────────────────────────────────
+  ca.trinity.local:
+    image: hyperledger/fabric-ca:1.5.7
+    container_name: ca.trinity.local
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.trinity.local
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_PORT=7054
+      - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=0.0.0.0:17054
+    ports:
+      - "7054:7054"
+      - "17054:17054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ca.trinity.local:/etc/hyperledger/fabric-ca-server
+      - ../fabric-network/crypto-config/peerOrganizations/trinity.local/ca/:/etc/hyperledger/fabric-ca-server/ca
+    networks:
+      - trinity_net
+
+  # ── Orderer ──────────────────────────────────────────────────────────────────
+  orderer.trinity.local:
+    image: hyperledger/fabric-orderer:2.5.4
+    container_name: orderer.trinity.local
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_ADMIN_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer.trinity.local:9443
+      - ORDERER_METRICS_PROVIDER=prometheus
+    working_dir: /root
+    command: orderer
+    volumes:
+      - ../fabric-network/config/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ../fabric-network/crypto-config/ordererOrganizations/trinity.local/orderers/orderer.trinity.local/msp:/var/hyperledger/orderer/msp
+      - ../fabric-network/crypto-config/ordererOrganizations/trinity.local/orderers/orderer.trinity.local/tls:/var/hyperledger/orderer/tls
+      - orderer.trinity.local:/var/hyperledger/production/orderer
+    ports:
+      - "7050:7050"
+      - "7053:7053"
+      - "9443:9443"
+    networks:
+      - trinity_net
+
+  # ── CouchDB — City A ─────────────────────────────────────────────────────────
+  couchdb.city_a:
+    image: couchdb:3.3.2
+    container_name: couchdb.city_a
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=adminpw
+    ports:
+      - "5984:5984"
+    volumes:
+      - couchdb_city_a:/opt/couchdb/data
+    networks:
+      - trinity_net
+
+  # ── Peer — City A ────────────────────────────────────────────────────────────
+  peer0.city_a.trinity.local:
+    image: hyperledger/fabric-peer:2.5.4
+    container_name: peer0.city_a.trinity.local
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=trinity_net
+      - DOCKER_API_VERSION=1.41
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer0.city_a.trinity.local
+      - CORE_PEER_ADDRESS=peer0.city_a.trinity.local:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.city_a.trinity.local:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.city_a.trinity.local:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.city_a.trinity.local:7051
+      - CORE_PEER_LOCALMSPID=CityAMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.city_a.trinity.local:9444
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.city_a:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../fabric-network/crypto-config/peerOrganizations/city_a.trinity.local/peers/peer0.city_a.trinity.local/msp:/etc/hyperledger/fabric/msp
+      - ../fabric-network/crypto-config/peerOrganizations/city_a.trinity.local/peers/peer0.city_a.trinity.local/tls:/etc/hyperledger/fabric/tls
+      - peer0.city_a.trinity.local:/var/hyperledger/production
+    working_dir: /root
+    command: peer node start
+    ports:
+      - "7051:7051"
+      - "9444:9444"
+    depends_on:
+      - orderer.trinity.local
+      - couchdb.city_a
+    networks:
+      - trinity_net
+
+  # ── CouchDB — City B ─────────────────────────────────────────────────────────
+  couchdb.city_b:
+    image: couchdb:3.3.2
+    container_name: couchdb.city_b
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=adminpw
+    ports:
+      - "6984:5984"
+    volumes:
+      - couchdb_city_b:/opt/couchdb/data
+    networks:
+      - trinity_net
+
+  # ── Peer — City B ────────────────────────────────────────────────────────────
+  peer0.city_b.trinity.local:
+    image: hyperledger/fabric-peer:2.5.4
+    container_name: peer0.city_b.trinity.local
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=trinity_net
+      - DOCKER_API_VERSION=1.41
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer0.city_b.trinity.local
+      - CORE_PEER_ADDRESS=peer0.city_b.trinity.local:8051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.city_b.trinity.local:8052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.city_b.trinity.local:8051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.city_b.trinity.local:8051
+      - CORE_PEER_LOCALMSPID=CityBMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.city_b.trinity.local:9445
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.city_b:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../fabric-network/crypto-config/peerOrganizations/city_b.trinity.local/peers/peer0.city_b.trinity.local/msp:/etc/hyperledger/fabric/msp
+      - ../fabric-network/crypto-config/peerOrganizations/city_b.trinity.local/peers/peer0.city_b.trinity.local/tls:/etc/hyperledger/fabric/tls
+      - peer0.city_b.trinity.local:/var/hyperledger/production
+    working_dir: /root
+    command: peer node start
+    ports:
+      - "8051:8051"
+      - "9445:9445"
+    depends_on:
+      - orderer.trinity.local
+      - couchdb.city_b
+    networks:
+      - trinity_net
+
+  # ── CouchDB — City C ─────────────────────────────────────────────────────────
+  couchdb.city_c:
+    image: couchdb:3.3.2
+    container_name: couchdb.city_c
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=adminpw
+    ports:
+      - "7984:5984"
+    volumes:
+      - couchdb_city_c:/opt/couchdb/data
+    networks:
+      - trinity_net
+
+  # ── Peer — City C ────────────────────────────────────────────────────────────
+  peer0.city_c.trinity.local:
+    image: hyperledger/fabric-peer:2.5.4
+    container_name: peer0.city_c.trinity.local
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=trinity_net
+      - DOCKER_API_VERSION=1.41
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer0.city_c.trinity.local
+      - CORE_PEER_ADDRESS=peer0.city_c.trinity.local:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.city_c.trinity.local:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.city_c.trinity.local:9051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.city_c.trinity.local:9051
+      - CORE_PEER_LOCALMSPID=CityCMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.city_c.trinity.local:9446
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.city_c:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../fabric-network/crypto-config/peerOrganizations/city_c.trinity.local/peers/peer0.city_c.trinity.local/msp:/etc/hyperledger/fabric/msp
+      - ../fabric-network/crypto-config/peerOrganizations/city_c.trinity.local/peers/peer0.city_c.trinity.local/tls:/etc/hyperledger/fabric/tls
+      - peer0.city_c.trinity.local:/var/hyperledger/production
+    working_dir: /root
+    command: peer node start
+    ports:
+      - "9051:9051"
+      - "9446:9446"
+    depends_on:
+      - orderer.trinity.local
+      - couchdb.city_c
+    networks:
+      - trinity_net
+
+  # ── Fabric CLI (channel + chaincode admin) ───────────────────────────────────
+  cli:
+    image: hyperledger/fabric-tools:2.5.4
+    container_name: cli
+    tty: true
+    stdin_open: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer0.city_a.trinity.local:7051
+      - CORE_PEER_LOCALMSPID=CityAMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/city_a.trinity.local/peers/peer0.city_a.trinity.local/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/city_a.trinity.local/peers/peer0.city_a.trinity.local/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/city_a.trinity.local/peers/peer0.city_a.trinity.local/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/city_a.trinity.local/users/Admin@city_a.trinity.local/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../fabric-network/chaincode:/opt/gopath/src/github.com/chaincode
+      - ../fabric-network/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto
+      - ../fabric-network/config:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+      - ../fabric-network/scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
+    depends_on:
+      - peer0.city_a.trinity.local
+      - peer0.city_b.trinity.local
+      - peer0.city_c.trinity.local
+    networks:
+      - trinity_net
+
+  # ── API Bridge (Express — port 3000) ─────────────────────────────────────────
+  trinity-api:
+    build:
+      context: ../api
+      dockerfile: Dockerfile
+    container_name: trinity-api
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - FABRIC_PEER_ENDPOINT=peer0.city_a.trinity.local:7051
+      - FABRIC_CHANNEL=city-intel-channel
+      - FABRIC_CHAINCODE=cti_audit
+      - FABRIC_MSP_ID=CityAMSP
+      - FABRIC_WALLET_PATH=/app/wallet
+      - FABRIC_TLS_CA=/app/tls/ca.crt
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../fabric-network/crypto-config:/app/crypto
+      - ./api/wallet:/app/wallet
+    depends_on:
+      - peer0.city_a.trinity.local
+    networks:
+      - trinity_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

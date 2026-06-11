@@ -1,0 +1,46 @@
+api_version: 3
+name: trinity_fl
+description: TRINITY Framework - Privacy-Preserving FL for Smart City IoT
+
+participants:
+  - name: server
+    type: server
+    org: trinity_org
+    fed_learn_port: 8012
+    admin_port: 8013
+
+  - name: site-1
+    type: client
+    org: trinity_org
+
+  - name: site-2
+    type: client
+    org: trinity_org
+
+  - name: site-3
+    type: client
+    org: trinity_org
+
+  - name: admin@trinity.local
+    type: admin
+    org: trinity_org
+    role: project_admin
+
+builders:
+  - path: nvflare.lighter.impl.workspace.WorkspaceBuilder
+    args:
+      template_file: master_template.yml
+
+  - path: nvflare.lighter.impl.template.TemplateBuilder
+
+  - path: nvflare.lighter.impl.static_file.StaticFileBuilder
+    args:
+      config_folder: config
+      overseer_agent:
+        path: nvflare.ha.dummy_overseer_agent.DummyOverseerAgent
+        overseer_exists: false
+        args:
+          sp_end_point: server:8012:8013
+
+  - path: nvflare.lighter.impl.cert.CertBuilder
+  - path: nvflare.lighter.impl.signature.SignatureBuilder
