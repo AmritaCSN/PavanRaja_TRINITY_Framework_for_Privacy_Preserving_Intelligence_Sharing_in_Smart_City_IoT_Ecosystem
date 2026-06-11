@@ -66,7 +66,7 @@ Evaluated on the real **ToN_IoT network intrusion dataset** (183,580 samples, 9 
 
 TRINITY implements a five-layer hierarchical system architecture. Each layer has a clearly defined security boundary and communicates with adjacent layers through well-specified interfaces.
 
-![TRINITY Architecture](Images/architecture.png)
+![TRINITY Architecture](/docs/architecture.png)
 
 > *Fig. 1 — TRINITY multi-layer privacy-preserving federated learning architecture integrating Differential Privacy, CKKS Secure Aggregation, and Hyperledger Fabric blockchain auditability for secure smart-city IoT intrusion detection.*
 
