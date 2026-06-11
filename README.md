@@ -251,8 +251,8 @@ TRINITY simulates realistic smart-city heterogeneity through a two-level partiti
 | Node | Samples | Normal% | Attack% | Train | Val | Test |
 |:---|:---|:---|:---|:---|:---|:---|
 | City A (site-1) | 53,973 | 77.8 | 22.2 | 37,781 | 8,096 | 8,096 |
-| City B (site-2) | 60,000 | 50.0 | 50.0 | 42,000 | 9,000 | 9,000 |
-| City C (site-3) | 60,000 | 20.0 | 80.0 | 42,000 | 9,000 | 9,000 |
+| City B (site-2) | 60,000 | 57.3 | 42.7 | 42,041 | 9,000 | 9,000 |
+| City C (site-3) | 60,000 | 20.0 | 80.0 | 21,053 | 9,000 | 9,000 |
 
 **Level 2 — Attack Subtype Skew:** Within attack samples, subtype proportions are drawn from a Dirichlet distribution with concentration parameter α = 0.3.
 
@@ -364,8 +364,8 @@ The proximal term (µ = 0.01) limits the ℓ₂-norm deviation of any client upd
 | **FedAvg (proj1)** | 98.25% | 0.9505 | 0.9717 | 0.9610 | 10.68 s | None |
 | **FedProx (proj2)** | 98.16% | 0.9545 | 0.9672 | 0.9592 | 10.67 s | None |
 | **FedProx+DP (proj3)** | 96.76% | 0.9382 | 0.9107 | 0.9242 | 23.79 s | DP |
-| **FedProx+SMPC (proj4)** | **98.49%** | **0.9571** | **0.9754** | **0.9662** | 11.18 s | CKKS |
-| **Full TRINITY (proj5)** | 96.83% | 0.9401 | 0.9113 | 0.9255 | 24.46 s | DP+CKKS |
+| **FedProx+SMPC (proj4)** | 98.49% | 0.9571 | 0.9754 | 0.9662 | 11.18 s | CKKS |
+| **Full TRINITY (proj5)** | **96.83%** | **0.9401** | **0.9113** | **0.9255** | **24.46 s** | **DP+CKKS** |
 
 ### Privacy-Utility Tradeoff
 
