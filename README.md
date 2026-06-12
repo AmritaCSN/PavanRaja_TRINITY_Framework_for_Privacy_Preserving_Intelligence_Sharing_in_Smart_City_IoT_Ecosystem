@@ -20,7 +20,8 @@
 9. [Security Features](#-security-features)
 10. [Experimental Results](#-experimental-results)
 11. [Threat Model](#-threat-model)
-
+12. [Flow Diagrams](#-flow-diagrams)
+    
 </details>
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
@@ -430,5 +431,31 @@ TRINITY assumes the **honest-but-curious (semi-honest) adversary model** — the
 
 - Byzantine-malicious clients (coordinated adversarial updates) — requires explicit Byzantine-robust aggregation (Krum, FLTrust, Bulyan), not currently implemented.
 - Fully compromised aggregation server — threshold HE would be required to eliminate the trusted aggregator assumption.
+
+![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
+
+## ➤ Flow Diagrams
+
+### NVFLARE Federated Learning Communication Flow
+
+> *Fig. 2 — NVFLARE FL orchestration: the server broadcasts the global model to three city sites, which return CKKS-encrypted noisy gradients; the server aggregates homomorphically and repeats across FL rounds.*
+
+![NVFLARE FL Flow](docs/nvflare_fl_flow.svg)
+
+![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
+
+### Hyperledger Fabric Network Communication Flow
+
+> *Fig. 3 — Hyperledger Fabric network topology: Root CA, etcdraft orderer, three city peer organisations (CityAMSP, CityBMSP, CityCMSP), chaincode deployment, and genesis block with transaction arrows.*
+
+![Fabric Network Flow](docs/fabric_network_flow.svg)
+
+![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
+
+### TRINITY Full Pipeline Flow
+
+> *Fig. 4 — Complete TRINITY pipeline end-to-end: FL server and three city sites, Differential Privacy (Opacus) and CKKS Secure Aggregation (TenSEAL) privacy layers, homomorphic aggregation, Hyperledger Fabric blockchain audit, per-experiment results (proj1–proj5), JSON/CSV result merging, and `plot_results.py` visualisation output.*
+
+![TRINITY Full Pipeline Flow](docs/trinity_full_pipeline_flow.svg)
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
